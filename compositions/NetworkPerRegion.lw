@@ -1,0 +1,40 @@
+composition
+
+import Fugue.AWS.Pattern.Network as Network
+import Fugue.AWS as AWS
+
+networkConfigs: [
+  {
+    region: AWS.Us-east-1,
+    cidr: "10.0.0.0/16",
+    subnet0: "10.0.0.0/24",
+    subnet1: "10.0.1.0/24",
+  },
+  {
+    region: AWS.Us-west-2,
+    cidr: "10.1.0.0/16",
+    subnet0: "10.1.0.0/24",
+    subnet1: "10.1.1.0/24",
+  },
+  {
+    region: AWS.Eu-west-1,
+    cidr: "10.2.0.0/16",
+    subnet0: "10.2.0.0/24",
+    subnet1: "10.2.1.0/24",
+  },
+]
+
+networks: [
+  Network.new {
+    name: AWS.Region.toString(config.region),
+    cidr: config.cidr,
+    region: config.region,
+    publicSubnets: [
+      (AWS.A, config.subnet0),
+      (AWS.B, config.subnet1),
+    ],
+    privateSubnets: [],
+    enableDnsSupport: True,
+    enableDnsHostnames: True,
+  } for config in networkConfigs
+]

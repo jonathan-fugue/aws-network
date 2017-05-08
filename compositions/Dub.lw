@@ -1,0 +1,17 @@
+composition
+
+import Fugue.AWS.Pattern.Network as Network
+import Fugue.AWS as AWS
+
+euWest1: Network.new {
+  name: "euWest1",
+  cidr: "10.3.0.0/16",
+  region: AWS.Eu-west-1,
+  publicSubnets: [
+    (AWS.A, "10.3.0.0/24"),
+    (AWS.B, "10.3.1.0/24"),
+  ],
+  privateSubnets: [],
+  enableDnsSupport: True,
+  enableDnsHostnames: True
+}
