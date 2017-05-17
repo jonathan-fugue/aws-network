@@ -3,7 +3,7 @@ composition
 import Fugue.AWS.Pattern.Network as Network
 import Fugue.AWS as AWS
 
-usEast2: Network.new {
+usEast1: Network.new {
   name: "usEast1",
   cidr: "10.0.0.0/16",
   region: AWS.Us-east-1,
