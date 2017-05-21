@@ -1,0 +1,22 @@
+language: bash
+
+matrix:
+  include:
+    - os: linux
+      env: FUGUE_VERSION=0.27.12-1807
+    - os: linux
+      env: FUGUE_VERSION=0.30.9-1964
+env:
+  global:
+    - secure: "dfS4aZkrM8LqKhRqJTfWjTP5lPSk8hwx7v7yxzjecdP9sVcsm1PLIMNlyDgNZWSogwZB915peVXAWkMSmsLwB6qmou7e+QP0515G5xUSrlzEliH+rCGaUGtSx1902TnkxSXkBjqSLmpAYeMuQoUJkK414KHjBVG+NAr69aPwNDP95ZT0rRtxZkXfFxj440E0q7yQjJchWyyUtEqRgGFgNjpJ4fVeS/f0iEK2/CFVd4MnTN5Sm+mTE9cdW8saZZIGvw+0iGoD7vPYChJXLMdl79NkMqpc4UT8C3A5zxDPzZmCAXtw+GS5ieM9cOFClXUfHbQKNbZ8v9O0DF8REsa3BBAgg/r4JlqxxkzUyJkssKaMp8slcTw/zYum4lyAOHYwf6vAVtM8y0QLUk8tTWzNWRcauHUH/KC1gSvDNwqeDXaFot5UxTpSKOtYrSy57VdAdbi7HDc/zNR7FqxwYx/6DzJeRJ491cc/1/1jL/+E5ha3uIXjI6byPRi8ouWqQXwCy57KCqttq/aivuvGsy0Paji9Ridt5cwb66Mdxk9r6qSoMzEpJQiKNL8lheWp8ejBJPA4Lnu2fk0dicSTdjWOo9FXm0boVycJf/OwSzp2Ef06uhUEclTGJQ/vU4aUWYZxiBjdFqYJjZNkfHQQPcaqRvxzLmByX6Ls6SL2tc8gFy8=" 
+    - secure: "adflTK+lsMsdQLJZ0LTOHTbUJvS1rOtHyOmXHHdklzv2hH/0gWVcYhN+VK/Fz1hw8ZW1B631lwdh/ollOqqeQyXxJSaWbAp5msTfee+yiy9vRaniZY+7CRBgoYJ1/jSxNt/IBXFRJzcQpxDI8Su5lLPjqZpx00HJlUM+qCVoE3K7nlEc3BRQrz45E0eNEuJHTS7T1BpM47YDQwGFkvtfazegLA9mr4xlF2adFOFB4Hu5CYv0leWLz6aG9vdcCV2rax0RqXaG/09KDpqB+dmH81TvG7ann1SAX+sKW3iJLlOW4eQd2eHh4ItLlSJ/OpYqlz6db+ZhrliPqL8fMShBQ6ZHugrm+vF+k4WdzhptcRNsYGKOhorCzMYvL450/bhSZo0Ba1onckGqoGoBNU/zfirs5YAlElcEKhX25ErOhOCW3q6Kra3dFz5EUiEQ7WFeN0/SQz49QZ3HsMjsO0iiyAsUtm/7FoY8MtHDqTtHdOU+BwyL90DflrsmQa5SKl+0oY2SBuDGUPkzQiEwZUHGEtp+0b7n+q0OB1OQ0z+2REiHloziDcDIUYGVw7pK8GNb0QFLy+Yn5v4hjbeuMZ1wROSrRQwnSz/2AuvVS/B8xnytr6V7+uuWIfzYer7+TPrzylEqUhtssVOq3BfXWyLUlcPEfmqjWD3uF4JW/stCdBU="
+
+before_install:
+  - sudo pip install awscli
+  - aws s3 cp s3://saboRepo/fugue-client_${FUGUE_VERSION}_amd64.deb fugue-cli.deb
+
+install:
+  - sudo dpkg --install fugue-cli.deb  
+
+script:
+  make 
