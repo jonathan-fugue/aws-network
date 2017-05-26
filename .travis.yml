@@ -4,8 +4,10 @@ matrix:
   include:
     - os: linux
       env: FUGUE_VERSION=0.27.12-1807
+      env: FUGUE_RELEASE=2017.01.20-2
     - os: linux
       env: FUGUE_VERSION=0.30.9-1964
+      env: FUGUE_RELEASE=2017.05.23
 env:
   global:
     - secure: "dfS4aZkrM8LqKhRqJTfWjTP5lPSk8hwx7v7yxzjecdP9sVcsm1PLIMNlyDgNZWSogwZB915peVXAWkMSmsLwB6qmou7e+QP0515G5xUSrlzEliH+rCGaUGtSx1902TnkxSXkBjqSLmpAYeMuQoUJkK414KHjBVG+NAr69aPwNDP95ZT0rRtxZkXfFxj440E0q7yQjJchWyyUtEqRgGFgNjpJ4fVeS/f0iEK2/CFVd4MnTN5Sm+mTE9cdW8saZZIGvw+0iGoD7vPYChJXLMdl79NkMqpc4UT8C3A5zxDPzZmCAXtw+GS5ieM9cOFClXUfHbQKNbZ8v9O0DF8REsa3BBAgg/r4JlqxxkzUyJkssKaMp8slcTw/zYum4lyAOHYwf6vAVtM8y0QLUk8tTWzNWRcauHUH/KC1gSvDNwqeDXaFot5UxTpSKOtYrSy57VdAdbi7HDc/zNR7FqxwYx/6DzJeRJ491cc/1/1jL/+E5ha3uIXjI6byPRi8ouWqQXwCy57KCqttq/aivuvGsy0Paji9Ridt5cwb66Mdxk9r6qSoMzEpJQiKNL8lheWp8ejBJPA4Lnu2fk0dicSTdjWOo9FXm0boVycJf/OwSzp2Ef06uhUEclTGJQ/vU4aUWYZxiBjdFqYJjZNkfHQQPcaqRvxzLmByX6Ls6SL2tc8gFy8=" 
@@ -13,7 +15,7 @@ env:
 
 before_install:
   - sudo pip install awscli
-  - aws s3 cp s3://saboRepo/fugue-client_${FUGUE_VERSION}_amd64.deb fugue-cli.deb
+  - aws s3 cp s3://saboRepo/${FUGUE_RELEASE}/fugue-client_${FUGUE_VERSION}_amd64.deb fugue-cli.deb
 
 install:
   - sudo dpkg --install fugue-cli.deb  
