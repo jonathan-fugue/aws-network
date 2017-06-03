@@ -8,3 +8,11 @@ environment:
       FUGUE_VERSION: "0.27.12-1807"
     - FUGUE_RELEASE: "2017.05.23"
       FUGUE_VERSION: "0.30.9-1964" 
+
+build: off
+
+test_script:
+  - mingw32-make
+
+on_finish:
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
