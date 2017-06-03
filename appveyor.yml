@@ -1,0 +1,11 @@
+environment:
+  AWS_ACCESS_KEY_ID:
+    secure: eD7NuBT0GYE+lxrJ7XT7MTNRyVOWa5rdH9gs76i/1xM=
+  AWS_SECRET_ACCESS_KEY:
+    secure: 0YVhX8DDi7leQpcnZ+NbT9hZ1TL2ejQv7gNmlYTCMQbAJB+eTdZur2lw7blNaByz
+
+matrix:
+  - FUGUE_RELEASE: "2017.01.20-2"
+    FUGUE_VERSION: "0.27.12-1807"
+  - FUGUE_RELEASE: "2017.05.23"
+    FUGUE_VERSION: "0.30.9-1964" 
