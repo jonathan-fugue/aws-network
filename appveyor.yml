@@ -11,7 +11,7 @@ environment:
 
 install:
   - set PATH=C:\MinGW\bin;%PATH%
-  - aws s3 cp s3://saboRepo/$Env.FUGUE_RELEASE/fugue-client-$Env.FUGUE_VERSION.msi fugue-cli.msi
+  - aws s3 cp "s3://saboRepo/$Env.FUGUE_RELEASE/fugue-client-$Env.FUGUE_VERSION.msi" fugue-cli.msi
   - msiexec /i fugue-cli.msi /qn ALLUSERS=1
 
 build: off
