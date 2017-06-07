@@ -11,13 +11,16 @@ environment:
 
 install:
   - set PATH=C:\MinGW\bin;%PATH%
-  - aws s3 cp "s3://saboRepo/$Env.FUGUE_RELEASE/fugue-client-$Env.FUGUE_VERSION.msi" fugue-cli.msi
+  - aws s3 cp s3://saboRepo/$FUGUE_RELEASE/fugue-client-$FUGUE_VERSION.msi fugue-cli.msi
+  - ps: if($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode ) }
   - msiexec /i fugue-cli.msi /qn ALLUSERS=1
+  - ps: if($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode ) }
 
 build: off
 
 test_script:
   - mingw32-make
+    - ps: if($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode ) }
 
 on_finish:
   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
