@@ -11,6 +11,7 @@ environment:
 
 install:
   - set PATH=C:\MinGW\bin;C:\Program Files\Fugue\bin;%PATH%
+  - set LUDWIG_PATH=C:\Program Files\Fugue\lib;%LUDWIG_PATH%
   - aws s3 cp s3://saboRepo/%FUGUE_RELEASE%/fugue-client-%FUGUE_VERSION%.msi fugue-cli.msi
   - ps: if($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode ) }
   - msiexec /i fugue-cli.msi /qn ALLUSERS=1
