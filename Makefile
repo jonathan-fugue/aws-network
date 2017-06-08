@@ -2,13 +2,7 @@ LWCFLAGS = --werror
 
 default: check
 
-ifneq ($(OS),Windows_NT)
-LUDWIG = $(shell find . -name deps -prune -o -name '*.lw' -print)
-endif
-
-ifeq ($(OS),Windows_NT)
-LUDWIG = $(dir /s/b '*.lw')
-endif
+LUDWIG = $(wildcard **/*.lw)
 
 ludwig: $(LUDWIG)
 
