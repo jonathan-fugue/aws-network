@@ -51,7 +51,7 @@ def main(args):
         else:
             usage()
     except FileNotFoundError:
-        sys.exit('(╯°□°）╯︵ ┻━┻" File not found')
+        sys.exit('File not found')
 
     data = json.load(f)
     f.close()
@@ -65,6 +65,7 @@ def main(args):
     alias = (data.get('alias', None) or data['fid']).lower()
 
     for _, top_level_subnet in subnets.items():
+        for _, top_level_subnet in
         region = top_level_subnet['region']
         subnet = top_level_subnet['value']['subnet']
         subnet_id = subnet['SubnetId']
@@ -83,16 +84,16 @@ def main(args):
         else:
             private_subnets.append(SUBNET.format(subnet_id=subnet_id))
 
-    output = TYPE.format(
-        alias=alias,
-        comments='\n'.join(comments),
-        region=region,
-        vpc_id=vpc_id,
-        public_subnets=',\n{}'.format(' ' * INDENT).join(public_subnets),
-        private_subnets=',\n {}'.format(' ' * INDENT).join(private_subnets),
-    )
+        output = TYPE.format(
+            alias=alias,
+            comments='\n'.join(comments),
+            region=region,
+            vpc_id=vpc_id,
+            public_subnets=',\n{}'.format(' ' * INDENT).join(public_subnets),
+            private_subnets=',\n {}'.format(' ' * INDENT).join(private_subnets),
+        )
 
-    print(output)
+        print(output)
 
 
 def usage():
