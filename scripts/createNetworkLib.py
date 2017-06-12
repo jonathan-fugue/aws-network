@@ -1,20 +1,21 @@
 #! /usr/bin/env python
 
 """
-Usage: Gen.py FUGUE_STATUS_OUTPUT
-
 Convert Fugue status output to NetworkStandard records
-
 """
 
 import sys
+import os
 import json
 
-TYPE = """import Fugue.AWS.EC2 as EC2
+IMPORTS = """import Fugue.AWS.EC2 as EC2
 import Fugue.AWS as AWS
+"""
 
-{comments}
-{alias}:
+TYPE = """
+export {vpc_name_tag}
+
+{vpc_name_tag}:
   let region: Optional.unpackOrError(
     AWS.Region.fromString("{region}"),
     "Failed looking up the region by name")
@@ -32,8 +33,7 @@ import Fugue.AWS as AWS
   }}
 """
 
-SUBNET = """EC2.Subnet.external("{subnet_id}", region)"""
-COMMENT = """# vpc: {vpc_id}, subnet: {subnet_id}, availability zone: {availability_zone}"""
+SUBNET = """EC2.Subnet.external("{subnet_id}", region), # {subnet_name_tag} {az}"""
 
 INDENT = 8
 
@@ -56,6 +56,7 @@ def main(args):
     data = json.load(f)
     f.close()
 
+    vpcs = data.get('resources', {}).get('vpcs', {})
     subnets = data.get('resources', {}).get('subnets', {})
 
     if not subnets:
@@ -64,37 +65,41 @@ def main(args):
 
     alias = (data.get('alias', None) or data['fid']).lower()
 
-    for _, top_level_subnet in subnets.items():
-        for _, top_level_subnet in
-        region = top_level_subnet['region']
-        subnet = top_level_subnet['value']['subnet']
-        subnet_id = subnet['SubnetId']
-        vpc_id = subnet['VpcId']
-        availability_zone = subnet['AvailabilityZone']
-        is_public = any([v['Value'] == 'public' for v in subnet['Tags']])
+    print IMPORTS
 
-        comments.append(COMMENT.format(
-            vpc_id=vpc_id,
-            subnet_id=subnet_id,
-            availability_zone=availability_zone,
-        ))
+    for _, top_level_vpc in vpcs.items():
+        tl_vpc_id = top_level_vpc['value']['vpc']['VpcId']
+        vpc_name_tag = [t['Value'].lower() for t in top_level_vpc['value']['vpc']['Tags'] if t['Key'] == 'Name'][0]
+        comments = []
+        public_subnets = []
+        private_subnets = []
+        for _, top_level_subnet in subnets.items():
+            subnet_vpc_id = top_level_subnet['value']['subnet']['VpcId']
+            if tl_vpc_id == subnet_vpc_id:
+                region = top_level_subnet['region']
+                subnet = top_level_subnet['value']['subnet']
+                subnet_name_tag = [t['Value'] for t in subnet['Tags'] if t['Key'] == 'Name'][0]
+                subnet_id = subnet['SubnetId']
+                vpc_id = subnet['VpcId']
+                az = subnet['AvailabilityZone']
+                is_public = any([v['Value'] == 'public' for v in subnet['Tags']])
 
-        if is_public:
-            public_subnets.append(SUBNET.format(subnet_id=subnet_id))
-        else:
-            private_subnets.append(SUBNET.format(subnet_id=subnet_id))
+                if is_public:
+                    public_subnets.append(SUBNET.format(subnet_id=subnet_id,subnet_name_tag=subnet_name_tag,az=az))
+                else:
+                    private_subnets.append(SUBNET.format(subnet_id=subnet_id,subnet_name_tag=subnet_name_tag,az=az))
 
         output = TYPE.format(
             alias=alias,
+            vpc_name_tag=vpc_name_tag,
             comments='\n'.join(comments),
             region=region,
             vpc_id=vpc_id,
-            public_subnets=',\n{}'.format(' ' * INDENT).join(public_subnets),
-            private_subnets=',\n {}'.format(' ' * INDENT).join(private_subnets),
+            public_subnets=',\n{}'.format(' ' * INDENT).join(sorted(public_subnets, key = lambda x: x.split()[-1])),
+            private_subnets=',\n {}'.format(' ' * INDENT).join(sorted(private_subnets, key = lambda x: x.split()[-1])),
         )
 
         print(output)
-
 
 def usage():
     print(__doc__)
