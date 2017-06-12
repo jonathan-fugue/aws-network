@@ -8,6 +8,8 @@ environment:
       FUGUE_VERSION: "0.27.12.1899"
     - FUGUE_RELEASE: "2017.05.23"
       FUGUE_VERSION: "0.30.9.2059"
+    - FUGUE_RELEASE: "2017.06.12"
+      FUGUE_VERSION: "0.34.11.2229"
 
 install:
   - set PATH=C:\MinGW\bin;C:\Program Files\Fugue\bin;%PATH%
