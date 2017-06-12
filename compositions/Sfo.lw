@@ -3,15 +3,18 @@ composition
 import Fugue.AWS.Pattern.Network as Network
 import Fugue.AWS as AWS
 
-usWest1: Network.new {
-  name: "usWest1",
-  cidr: "10.1.0.0/16",
-  region: AWS.Us-west-1,
-  publicSubnets: [
-    (AWS.A, "10.1.0.0/24"),
-    (AWS.B, "10.1.1.0/24"),
-  ],
-  privateSubnets: [],
-  enableDnsSupport: True,
-  enableDnsHostnames: True
-}
+usWest1: 
+  let name: "usWest1"
+  Network.new {
+    name: name,
+    cidr: "10.1.0.0/16",
+    region: AWS.Us-west-1,
+    publicSubnets: [
+      (AWS.A, "10.1.0.0/24"),
+      (AWS.B, "10.1.1.0/24"),
+    ],
+    privateSubnets: [],
+    enableDnsSupport: True,
+    enableDnsHostnames: True,
+    tags: [AWS.tag("Name", name)]
+  }

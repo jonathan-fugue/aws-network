@@ -1,0 +1,114 @@
+import Fugue.AWS.Pattern.Network as Network
+import Fugue.AWS.EC2 as EC2
+import Fugue.AWS as AWS
+
+type PeeredNetwork:
+  shared: Network.Network 
+  dev: Network.Network
+  test: Network.Network
+  perf: Network.Network
+  prod: Network.Network
+
+fun new {
+      shared: {
+        region: AWS.Region,
+        cidr: String,
+        subnets: List<(AWS.AvailabilityZone, String)>,
+      },
+      dev: {
+        region: AWS.Region,
+        cidr: String,
+        subnets: List<(AWS.AvailabilityZone, String)>,
+      },
+      test: {
+        region: AWS.Region,
+        cidr: String,
+        subnets: List<(AWS.AvailabilityZone, String)>,
+      },
+      perf: {
+        region: AWS.Region,
+        cidr: String,
+        subnets: List<(AWS.AvailabilityZone, String)>,
+      },
+      prod: {
+        region: AWS.Region,
+        cidr: String,
+        subnets: List<(AWS.AvailabilityZone, String)>,
+      },
+    } -> PeeredNetwork:
+
+  let sharedNet: Network.public(shared with {name: "SHARED",enableDnsSupport: True,enableDnsHostnames: True})
+  let devNet: Network.public(dev with {name: "DEV",enableDnsSupport: True,enableDnsHostnames: True}) 
+  let testNet: Network.public(test with {name: "TEST",enableDnsSupport: True,enableDnsHostnames: True})  
+  let perfNet: Network.public(perf with {name: "PERF",enableDnsSupport: True,enableDnsHostnames: True})  
+  let prodNet: Network.public(prod with {name: "PROD",enableDnsSupport: True,enableDnsHostnames: True}) 
+
+  let fun peerToShared(network: Network.Network) -> EC2.VpcPeeringConnection:
+    EC2.VpcPeeringConnection.new {
+      vpc: network.vpc,
+      peerVpc: EC2.PeerVpc.managed {
+        vpc: sharedNet.vpc,
+        options: EC2.PeeringOptions.allowDnsResolution,
+      },
+      options: EC2.PeeringOptions.allowDnsResolution,
+    }
+
+  let devPeeringConnection: peerToShared(devNet)
+  let testPeeringConnection: peerToShared(testNet)
+  let perfPeeringConnection: peerToShared(perfNet) 
+  let prodPeeringConnection: peerToShared(prodNet) 
+
+  let fun makeRoutes(name: String, network: Network.Network, peeringConnection: EC2.VpcPeeringConnection) -> List<EC2.RouteTable>:
+    [ 
+      EC2.RouteTable.new {
+        vpc: network.vpc,
+        associations: network.publicSubnets,
+        routes: [
+          EC2.Route.new {
+            destinationCidrBlock: sharedNet.vpc.(EC2.Vpc).cidrBlock,
+            target: EC2.VpcPeeringConnectionTarget(peeringConnection),
+          },
+          EC2.Route.new {
+            destinationCidrBlock: "0.0.0.0/0",
+            target: EC2.GatewayTarget(network.igw),
+          }
+        ],
+       tags: [AWS.tag("Name", name ++ "-PUBLIC-RT")]
+      }
+    ]
+
+  let sharedRouteTable: EC2.RouteTable.new {
+    vpc: sharedNet.vpc,
+    associations: sharedNet.publicSubnets,
+    routes: [
+      EC2.Route.new {
+        destinationCidrBlock: devNet.vpc.(EC2.Vpc).cidrBlock,
+        target: EC2.VpcPeeringConnectionTarget(devPeeringConnection),
+      },
+      EC2.Route.new {
+        destinationCidrBlock: testNet.vpc.(EC2.Vpc).cidrBlock,
+        target: EC2.VpcPeeringConnectionTarget(testPeeringConnection),
+      },
+      EC2.Route.new {
+        destinationCidrBlock: perfNet.vpc.(EC2.Vpc).cidrBlock,
+        target: EC2.VpcPeeringConnectionTarget(perfPeeringConnection),
+      },
+      EC2.Route.new {
+        destinationCidrBlock: prodNet.vpc.(EC2.Vpc).cidrBlock,
+        target: EC2.VpcPeeringConnectionTarget(perfPeeringConnection),
+      },
+      EC2.Route.new {
+        destinationCidrBlock: "0.0.0.0/0",
+        target: EC2.GatewayTarget(sharedNet.igw),
+      }
+    ],
+    tags: [AWS.tag("Name", "SHARED-PUBLIC-RT")]
+  }
+
+  {
+    shared: sharedNet with {routes: [sharedRouteTable]},
+    dev: devNet with {routes: makeRoutes("DEV", devNet, devPeeringConnection)},
+    test: testNet with {routes: makeRoutes("TEST", testNet, testPeeringConnection)},
+    perf: perfNet with {routes: makeRoutes("PERF", perfNet, perfPeeringConnection)},
+    prod: prodNet with {routes: makeRoutes("PROD", prodNet, prodPeeringConnection)},
+  }

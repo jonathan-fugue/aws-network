@@ -36,5 +36,6 @@ networks: [
     privateSubnets: [],
     enableDnsSupport: True,
     enableDnsHostnames: True,
+    tags: [AWS.tag("Name", AWS.Region.toString(config.region))]
   } for config in networkConfigs
 ]
