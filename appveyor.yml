@@ -4,8 +4,6 @@ environment:
   AWS_SECRET_ACCESS_KEY:
     secure: 0YVhX8DDi7leQpcnZ+NbT9hZ1TL2ejQv7gNmlYTCMQbAJB+eTdZur2lw7blNaByz
   matrix:
-    - FUGUE_RELEASE: "2017.01.20-2"
-      FUGUE_VERSION: "0.27.12.1899"
     - FUGUE_RELEASE: "2017.05.23"
       FUGUE_VERSION: "0.30.9.2059"
     - FUGUE_RELEASE: "2017.06.12"
