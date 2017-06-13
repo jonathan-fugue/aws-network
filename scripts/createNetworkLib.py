@@ -65,7 +65,7 @@ def main(args):
 
     alias = (data.get('alias', None) or data['fid']).lower()
 
-    print IMPORTS
+    print(IMPORTS)
 
     for _, top_level_vpc in vpcs.items():
         tl_vpc_id = top_level_vpc['value']['vpc']['VpcId']
