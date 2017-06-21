@@ -1,0 +1,119 @@
+export
+  type HubSpokeNetwork
+  new
+
+import Fugue.AWS.Pattern.Network as Network
+import Fugue.AWS.EC2 as EC2
+import Fugue.AWS as AWS
+
+type HubSpokeNetwork:
+  | HubSpokeNetwork
+    hub: Network.Network 
+    spokeA: Network.Network
+    spokeB: Network.Network
+    spokeC: Network.Network
+    spokeD: Network.Network
+
+fun new {
+      hub: {
+        region: AWS.Region,
+        cidr: String,
+        subnets: List<(AWS.AvailabilityZone, String)>,
+      },
+      spokeA: {
+        region: AWS.Region,
+        cidr: String,
+        subnets: List<(AWS.AvailabilityZone, String)>,
+      },
+      spokeB: {
+        region: AWS.Region,
+        cidr: String,
+        subnets: List<(AWS.AvailabilityZone, String)>,
+      },
+      spokeC: {
+        region: AWS.Region,
+        cidr: String,
+        subnets: List<(AWS.AvailabilityZone, String)>,
+      },
+      spokeD: {
+        region: AWS.Region,
+        cidr: String,
+        subnets: List<(AWS.AvailabilityZone, String)>,
+      },
+    } -> HubSpokeNetwork:
+
+  let hubNet: Network.public(hub with {name: "HUB",enableDnsSupport: True,enableDnsHostnames: True})
+  let spokeANet: Network.public(spokeA with {name" "SPOKEA",enableDnsSupport: True,enableDnsHostnames: True})
+  let spokeBNet: Network.public(spokeB with {name" "SPOKEB",enableDnsSupport: True,enableDnsHostnames: True})
+  let spokeCNet: Network.public(spokeC with {name" "SPOKEC",enableDnsSupport: True,enableDnsHostnames: True})  
+  let spokeDNet: Network.public(spokeD with {name" "SPOKED",enableDnsSupport: True,enableDnsHostnames: True}) 
+
+  let fun peerToHub(network: Network.Network) -> EC2.VpcPeeringConnection:
+    EC2.VpcPeeringConnection.new {
+      vpc: network.vpc,
+      peerVpc: EC2.PeerVpc.managed {
+        vpc: hubNet.vpc,
+        options: EC2.PeeringOptions.allowDnsResolution,
+      },
+      options: EC2.PeeringOptions.allowDnsResolution,
+    }
+
+  let spokeAPeeringConnection: peerToHub(spokeANet)
+  let spokeBPeeringConnection: peerToHub(spokeBNet)
+  let spokeCPeeringConnection: peerToHub(spokeCNet) 
+  let spokeDPeeringConnection: peerToHub(spokeDNet) 
+
+  let fun makeRoutes(name: String, network: Network.Network, peeringConnection: EC2.VpcPeeringConnection) -> List<EC2.RouteTable>:
+    [ 
+      EC2.RouteTable.new {
+        vpc: network.vpc,
+        associations: network.publicSubnets,
+        routes: [
+          EC2.Route.new {
+            destinationCidrBlock: hubNet.vpc.(EC2.Vpc).cidrBlock,
+            target: EC2.VpcPeeringConnectionTarget(peeringConnection),
+          },
+          EC2.Route.new {
+            destinationCidrBlock: "0.0.0.0/0",
+            target: EC2.GatewayTarget(network.igw),
+          }
+        ],
+       tags: [AWS.tag("Name", name ++ "-PUBLIC-RT")]
+      }
+    ]
+
+  let hubRouteTable: EC2.RouteTable.new {
+    vpc: hubNet.vpc,
+    associations: hubNet.publicSubnets,
+    routes: [
+      EC2.Route.new {
+        destinationCidrBlock: spokeANet.vpc.(EC2.Vpc).cidrBlock,
+        target: EC2.VpcPeeringConnectionTarget(spokeAPeeringConnection),
+      },
+      EC2.Route.new {
+        destinationCidrBlock: spokeBNet.vpc.(EC2.Vpc).cidrBlock,
+        target: EC2.VpcPeeringConnectionTarget(spokeBPeeringConnection),
+      },
+      EC2.Route.new {
+        destinationCidrBlock: spokeCNet.vpc.(EC2.Vpc).cidrBlock,
+        target: EC2.VpcPeeringConnectionTarget(spokeCPeeringConnection),
+      },
+      EC2.Route.new {
+        destinationCidrBlock: spokeDNet.vpc.(EC2.Vpc).cidrBlock,
+        target: EC2.VpcPeeringConnectionTarget(spokeDPeeringConnection),
+      },
+      EC2.Route.new {
+        destinationCidrBlock: "0.0.0.0/0",
+        target: EC2.GatewayTarget(hubNet.igw),
+      }
+    ],
+    tags: [AWS.tag("Name", "HUB-PUBLIC-RT")]
+  }
+
+  HubSpokeNetwork {
+    hub: hubNet with {routes: [hubRouteTable]},
+    spokeA: spokeANet with {routes: makeRoutes("SPOKEA", spokeANet, spokeAPeeringConnection)},
+    spokeB: spokeBNet with {routes: makeRoutes("SPOKEB", spokeBNet, spokeBPeeringConnection)},
+    spokeC: spokeCNet with {routes: makeRoutes("SPOKEC", spokeCNet, spokeCPeeringConnection)},
+    spokeD: spokeDNet with {routes: makeRoutes("SPOKED", spokeDNet, spokeDPeeringConnection)},
+  }

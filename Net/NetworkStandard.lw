@@ -1,0 +1,14 @@
+export
+  type NetworkStandard
+
+import Fugue.AWS.EC2 as EC2
+import Fugue.AWS as AWS
+
+type NetworkStandard:
+  | NetworkStandard
+      region: AWS.Region
+      vpc: EC2.Vpc
+      subnets: {
+        publicSubnets: List<EC2.Subnet>,
+        privateSubnets: List<EC2.Subnet>
+      }
