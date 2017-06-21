@@ -1,0 +1,32 @@
+composition
+
+import Net.HubSpokeNetwork as HubSpoke
+
+import Fugue.AWS.Pattern.Network as Network
+import Fugue.AWS as AWS
+
+
+hubSpokeNet: HubSpoke.new {
+  hub: {
+    region: AWS.Us-east-1,
+    cidr: "10.0.0.0/16",
+    name: "HUB",
+    subnets: [
+      (AWS.A, "10.0.0.0/24"), 
+      (AWS.B, "10.0.1.0/24"), 
+      (AWS.C, "10.0.2.0/24"),
+    ],
+  },
+  spokes: [
+    {
+      region: AWS.Us-east-1,
+      cidr: "10.1.0.0/16",
+      name: "DEV",
+      subnets: [
+        (AWS.A, "10.1.0.0/24"),
+        (AWS.B, "10.1.1.0/24"),
+        (AWS.C, "10.1.2.0/24"),
+      ],
+    },
+  ]
+}
