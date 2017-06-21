@@ -26,7 +26,7 @@ fun new {
       }>,
     } -> HubSpokeNetwork:
 
-  let hubNet: Network.public(hub with {name: "HUB", enableDnsSupport: True, enableDnsHostnames: True})
+  let hubNet: Network.public(hub with {name: hub.name, enableDnsSupport: True, enableDnsHostnames: True})
   let fun peerToHub(network: Network.Network) -> EC2.VpcPeeringConnection:
     EC2.VpcPeeringConnection.new {
       vpc: network.vpc,
@@ -82,7 +82,7 @@ fun new {
         }
       ]
     ),
-    tags: [AWS.tag("Name", "HUB-PUBLIC-RT")]
+    tags: [AWS.tag("Name", hub.name ++ "-PUBLIC-RT")]
   }
 
   HubSpokeNetwork {
