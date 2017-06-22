@@ -8,7 +8,7 @@ hubSpokeNet: HubSpoke.new {
   hub: {
     region: AWS.Us-east-1,
     cidr: "10.0.0.0/16",
-    name: "HUB",
+    name: "SHARED",
     subnets: [
       (AWS.A, "10.0.0.0/24"), 
       (AWS.B, "10.0.1.0/24"), 
@@ -18,7 +18,7 @@ hubSpokeNet: HubSpoke.new {
     {
       region: AWS.Us-east-1,
       cidr: "10.1.0.0/16",
-      name: "IAD",
+      name: "DEV",
       subnets: [
         (AWS.A, "10.1.0.0/24"),
         (AWS.B, "10.1.1.0/24"),
@@ -27,7 +27,7 @@ hubSpokeNet: HubSpoke.new {
     {
       region: AWS.Us-east-1,
       cidr: "10.2.0.0/16",
-      name: "SFO",
+      name: "QA",
       subnets: [
         (AWS.A, "10.2.0.0/24"),
         (AWS.B, "10.2.1.0/24"),
@@ -36,7 +36,7 @@ hubSpokeNet: HubSpoke.new {
     {
       region: AWS.Us-east-1,
       cidr: "10.3.0.0/16",
-      name: "SEA",
+      name: "PROD",
       subnets: [
         (AWS.A, "10.3.0.0/24"),
         (AWS.B, "10.3.1.0/24"),
