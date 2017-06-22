@@ -1,8 +1,6 @@
 composition
 
 import Net.HubSpokeNetwork as HubSpoke
-
-import Fugue.AWS.Pattern.Network as Network
 import Fugue.AWS as AWS
 
 
@@ -14,18 +12,34 @@ hubSpokeNet: HubSpoke.new {
     subnets: [
       (AWS.A, "10.0.0.0/24"), 
       (AWS.B, "10.0.1.0/24"), 
-      (AWS.C, "10.0.2.0/24"),
     ],
   },
   spokes: [
     {
       region: AWS.Us-east-1,
       cidr: "10.1.0.0/16",
-      name: "DEV",
+      name: "IAD",
       subnets: [
         (AWS.A, "10.1.0.0/24"),
         (AWS.B, "10.1.1.0/24"),
-        (AWS.C, "10.1.2.0/24"),
+      ],
+    },
+    {
+      region: AWS.Us-east-1,
+      cidr: "10.2.0.0/16",
+      name: "SFO",
+      subnets: [
+        (AWS.A, "10.2.0.0/24"),
+        (AWS.B, "10.2.1.0/24"),
+      ],
+    },
+    {
+      region: AWS.Us-east-1,
+      cidr: "10.3.0.0/16",
+      name: "SEA",
+      subnets: [
+        (AWS.A, "10.3.0.0/24"),
+        (AWS.B, "10.3.1.0/24"),
       ],
     },
   ]
