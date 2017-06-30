@@ -1,6 +1,6 @@
 composition
 
-import Net.HubSpokeNetwork as HubSpoke
+import Network.HubSpokeNetwork as HubSpoke
 import Fugue.AWS as AWS
 
 
