@@ -1,0 +1,139 @@
+composition
+
+hubSpokeNet: new {
+  hub: {
+    region: AWS.Us-east-1,
+    cidr: "10.0.0.0/16",
+    name: "SHARED",
+    subnets: [
+      (AWS.A, "10.0.0.0/24"),
+      (AWS.B, "10.0.1.0/24"),
+    ],
+  },
+  spokes: [
+    {
+      region: AWS.Us-east-1,
+      cidr: "10.1.0.0/16",
+      name: "DEV",
+      subnets: [
+        (AWS.A, "10.1.0.0/24"),
+        (AWS.B, "10.1.1.0/24"),
+      ],
+    },
+    {
+      region: AWS.Us-east-1,
+      cidr: "10.2.0.0/16",
+      name: "QA",
+      subnets: [
+        (AWS.A, "10.2.0.0/24"),
+        (AWS.B, "10.2.1.0/24"),
+      ],
+    },
+    {
+      region: AWS.Us-east-1,
+      cidr: "10.3.0.0/16",
+      name: "PROD",
+      subnets: [
+        (AWS.A, "10.3.0.0/24"),
+        (AWS.B, "10.3.1.0/24"),
+      ],
+    },
+  ]
+}
+
+
+export
+  type HubSpokeNetwork
+  new
+
+import Fugue.AWS.Pattern.Network as Network
+import Fugue.AWS.EC2 as EC2
+import Fugue.AWS as AWS
+
+type HubSpokeNetwork:
+  | HubSpokeNetwork
+    hub: Network.Network 
+    spokes: List<Network.Network>
+
+fun new {
+      hub: {
+        region: AWS.Region,
+        cidr: String,
+        name: String,
+        subnets: List<(AWS.AvailabilityZone, String)>,
+      },
+      spokes: List<{
+        region: AWS.Region,
+        cidr: String,
+        name: String,
+        subnets: List<(AWS.AvailabilityZone, String)>,
+      }>,
+    } -> HubSpokeNetwork:
+
+  let hubNet: Network.public(hub with {name: hub.name, enableDnsSupport: True, enableDnsHostnames: True})
+  let fun peerToHub(network: Network.Network) -> EC2.VpcPeeringConnection:
+    EC2.VpcPeeringConnection.new {
+      vpc: network.vpc,
+      peerVpc: EC2.PeerVpc.managed {
+        vpc: hubNet.vpc,
+        options: EC2.PeeringOptions.allowDnsResolution,
+      },
+      options: EC2.PeeringOptions.allowDnsResolution,
+    }
+
+  let spokeInfos: [
+    let net: Network.public(spoke with {name: spoke.name, enableDnsSupport: True, enableDnsHostnames: True})
+    {
+      name: spoke.name,
+      net: net,
+      peerConn: peerToHub(net)
+    } for spoke in spokes
+  ]
+
+  let fun makeRoutes(name: String, network: Network.Network, peeringConnection: EC2.VpcPeeringConnection) -> List<EC2.RouteTable>:
+    [
+      EC2.RouteTable.new {
+        vpc: network.vpc,
+        associations: network.publicSubnets,
+        routes: [
+          EC2.Route.new {
+            destinationCidrBlock: hubNet.vpc.(EC2.Vpc).cidrBlock,
+            target: EC2.VpcPeeringConnectionTarget(peeringConnection),
+          },
+          EC2.Route.new {
+            destinationCidrBlock: "0.0.0.0/0",
+            target: EC2.GatewayTarget(network.igw),
+          }
+        ],
+       tags: [AWS.tag("Name", name ++ "-PUBLIC-RT")]
+      }
+    ]
+
+  let hubRouteTable: EC2.RouteTable.new {
+    vpc: hubNet.vpc,
+    associations: hubNet.publicSubnets,
+    routes: List.concat(
+      [
+        EC2.Route.new {
+          destinationCidrBlock: spokeInfo.net.vpc.(EC2.Vpc).cidrBlock,
+          target: EC2.VpcPeeringConnectionTarget(spokeInfo.peerConn),
+        } for spokeInfo in spokeInfos
+      ],
+      [
+        EC2.Route.new {
+          destinationCidrBlock: "0.0.0.0/0",
+          target: EC2.GatewayTarget(hubNet.igw),
+        }
+      ]
+    ),
+    tags: [AWS.tag("Name", hub.name ++ "-PUBLIC-RT")]
+  }
+
+  HubSpokeNetwork {
+    hub: hubNet with {routes: [hubRouteTable]},
+    spokes: [
+      spokeInfo.net with {
+        routes: makeRoutes(spokeInfo.name, spokeInfo.net, spokeInfo.peerConn)
+      } for spokeInfo in spokeInfos
+    ],
+  }
