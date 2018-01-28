@@ -1,0 +1,24 @@
+composition
+
+import Fugue.AWS.Pattern.Network as Network
+import Fugue.AWS as AWS
+
+usEast1:
+  let name: "usEAst1"
+  Network.new {
+    name: name,
+    cidr: "10.0.0.0/16",
+    region: AWS.Us-east-1,
+    publicSubnets: [
+      (AWS.A, "10.0.0.0/24"),
+      (AWS.C, "10.0.1.0/24"),
+    ],
+    privateSubnets: [
+      (AWS.A, "10.0.10.0/24"),
+      (AWS.C, "10.0.11.0/24"),
+    ],
+    enableDnsSupport: True,
+    enableDnsHostnames: True,
+    enableNat: True,
+    tags: [AWS.tag("Name", name)]
+  }
